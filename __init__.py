@@ -19,6 +19,16 @@ class ClustersGrid(npyscreen.GridColTitles):
         else:
             actual_cell.color = 'DEFAULT'
 
+    def get_service(self, row):
+        while row >= 0:
+            if self.values[row][0] != '':
+                return self.values[row][0]
+            row -= 1
+        return ''
+
+    def get_container(self, row):
+        return self.values[row][1]
+
 
 class VersionSelectForm(npyscreen.Popup):
     def create(self):
@@ -27,14 +37,17 @@ class VersionSelectForm(npyscreen.Popup):
         # self.show_atx = 200
         # self.nextrelx = 40
 
-
-class KubeApp(npyscreen.NPSAppManaged): #StandardApp):   # NPSApp):
-    def do_stuff(self, pop):
+    def choose_version(self, key, app):
+        x, y = app.grid.edit_cell
+        value = app.grid.values[x][y]
+        self.name = app.grid.get_service(x) + '/' + app.grid.get_container(x) + ' ' + value
         # self.version_form.display()
         # self.pop.hidden = False
         # self.pop.display()
-        self.version_form.edit()
+        self.edit()
 
+
+class KubeApp(npyscreen.NPSAppManaged): #StandardApp):   # NPSApp):
     def main(self):
         main_form = npyscreen.Form(name="Clusters Overview v0.1.0",)
         main_form.add(npyscreen.BoxTitle,
@@ -62,10 +75,13 @@ class KubeApp(npyscreen.NPSAppManaged): #StandardApp):   # NPSApp):
                                   rely=2,
                                   relx=25,
                                   # max_width=150,
-                                  max_height=10,
+                                  max_height=20,
                                   columns=6,
                                   )
-        self.grid.add_handlers({curses.ascii.NL: self.do_stuff})
+        self.version_form = self.addForm("select-version-form", VersionSelectForm, )
+        self.grid.add_handlers({
+            curses.ascii.NL: lambda key: self.version_form.choose_version(key, self)
+        })
         self.grid.col_titles = ['Service', 'Container', 'Dev', 'Staging', 'Prod EUC', 'Prod USE']
         self.grid.values = []
         self.grid.values = [
@@ -76,12 +92,9 @@ class KubeApp(npyscreen.NPSAppManaged): #StandardApp):   # NPSApp):
             ['user-affinity', 'user-affinity', 'latest', '3.7.86', '3.7.86', '3.7.86'],
             ['es-graphite', 'es-graphite', 'latest', '1.0.1', '1.0.1', '1.0.1'],
         ]
-        pop_width = 30
-        pop_x = self.grid.relx + self.grid.width//2 - pop_width//2
-        pop_y = self.grid.rely + self.grid.height//2
-        self.version_form = self.addForm("select-version-form", VersionSelectForm, )
+
         self.version_form.show_atx = self.grid.relx + self.grid.width//2 - self.version_form.columns//2
-        self.version_form.show_aty = self.grid.rely + self.grid.height//2 
+        self.version_form.show_aty = self.grid.rely + self.grid.height//2
         self.ms = self.version_form.add(npyscreen.TitleSelectOne,
                                         max_height=4,
                                         value=[1,],

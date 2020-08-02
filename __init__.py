@@ -4,6 +4,8 @@ import curses
 import npyscreen
 from packaging import version
 
+from helm_reader import load_versions
+
 
 class ClustersGrid(npyscreen.GridColTitles):
     additional_x_offset = 2
@@ -33,17 +35,12 @@ class ClustersGrid(npyscreen.GridColTitles):
 class VersionSelectForm(npyscreen.Popup):
     def create(self):
         self.name = 'VersionSelectFormbla'
-        # pop_x = self.grid.relx + self.grid.width//2 - pop_width//2
-        # self.show_atx = 200
-        # self.nextrelx = 40
 
     def choose_version(self, key, app):
-        x, y = app.grid.edit_cell
-        value = app.grid.values[x][y]
-        self.name = app.grid.get_service(x) + '/' + app.grid.get_container(x) + ' ' + value
-        # self.version_form.display()
-        # self.pop.hidden = False
-        # self.pop.display()
+        grid = app.grid
+        x, y = grid.edit_cell
+        value = grid.values[x][y]
+        self.name = grid.get_service(x) + '/' + grid.get_container(x) + ' [' + value + ']'
         self.edit()
 
 
@@ -107,5 +104,6 @@ class KubeApp(npyscreen.NPSAppManaged): #StandardApp):   # NPSApp):
 
 
 if __name__ == "__main__":
+    # load_versions()
     App = KubeApp()
     App.run()
